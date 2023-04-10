@@ -28,8 +28,9 @@ app.post("/urls", (req, res) => {
   const foundKey = Object.keys(urlDatabase).find((key) => urlDatabase[key] === req.body.longURL);// find if long url already exists in dictionary
   console.log(foundKey);
   if (foundKey === undefined) {
-    urlDatabase[generateRandomString()] = req.body.longURL;
-    return res.send("ok");// Respond with 'Ok' (we will replace this)
+    randomString = generateRandomString()
+    urlDatabase[randomString] = req.body.longURL;
+    return res.redirect(`/urls/${randomString}`);
   } else {
     res.send("its already there");
   }
@@ -51,6 +52,10 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+app.get("/u/:id", (req, res) => {
+  const longURL = urlDatabase[req.params.id];
+  res.redirect(longURL);
+});
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
