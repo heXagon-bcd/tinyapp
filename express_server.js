@@ -26,7 +26,6 @@ app.get("/urls", (req, res) => {
 
 app.post("/urls", (req, res) => {
   const foundKey = Object.keys(urlDatabase).find((key) => urlDatabase[key] === req.body.longURL);// find if long url already exists in dictionary
-  console.log(foundKey);
   if (foundKey === undefined) {
     randomString = generateRandomString()
     urlDatabase[randomString] = req.body.longURL;
@@ -45,17 +44,22 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
-  // alt way of doing things
-  // const shortURL = req.params.id
-  // const longURL = urlDatabase[shortURL]
-  // const templateVars = { id: shortURL, longURL};
   res.render("urls_show", templateVars);
 });
 
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
-  res.redirect(longURL);
+  if (longURL === undefined) {
+    res.send("404");
+  } else {
+    res.redirect(longURL);
+  }
 });
+
+app.post("/urls/:id/delete", (req,res) => {
+  delete urlDatabase[req.params.id];
+  res.redirect("/urls");
+})
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
