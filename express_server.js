@@ -39,7 +39,7 @@ app.post("/urls", (req, res) => {
   } else {
     res.send("its already there");
   }
-  console.log(req.body); // Log the POST request body to the console
+  console.log(req.body); // Log the POST request body to the console/
 
 });
 
