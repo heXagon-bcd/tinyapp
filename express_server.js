@@ -74,6 +74,12 @@ app.post("/login", (req,res) => {
   
 });
 
+app.post("/logout", (req,res) => {
+  console.log("username",req.body.username);
+  res.cookie("username",req.body.username);
+  res.clearCookie('username', {path: "/login"});
+});
+
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
