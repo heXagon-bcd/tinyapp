@@ -61,6 +61,13 @@ app.post("/urls/:id/delete", (req,res) => {
   res.redirect("/urls");
 })
 
+app.post("/login", (req,res) => {
+  console.log("username",req.body);
+  res.cookie("username",req.body.username);
+  res.redirect(("/urls"))
+  
+});
+
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
