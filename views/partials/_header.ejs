@@ -28,6 +28,17 @@
             <button type="submit" class="btn btn-primary">Login</button>
           </div>
           </form>
+          <nav class="navbar bg-body-tertiary">
+            <div class="container-fluid">
+              <span class="navbar-text">
+                <% if(username) { %>
+                  Hello: <%= username %>
+                <%} else { %>
+                  Please Login!
+                <% } %>
+              </span>
+            </div>
+          </nav>
       </div>
     </div>
   </nav>
