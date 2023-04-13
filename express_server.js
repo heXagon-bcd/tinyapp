@@ -1,6 +1,8 @@
 const express = require("express");
 const app = express();
 const PORT = 8080;
+const cookieParser = require('cookie-parser');
+app.use(cookieParser())
 
 function generateRandomString() {
   return Math.random().toString(36).substr(2, 6)
@@ -20,7 +22,11 @@ app.get("/", (req,res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  console.log(req.cookies)
+  const templateVars = {
+    urls: urlDatabase,
+    username: req.cookies["username"]
+  };
   res.render("urls_index", templateVars);
 });
 
@@ -34,6 +40,7 @@ app.post("/urls", (req, res) => {
     res.send("its already there");
   }
   console.log(req.body); // Log the POST request body to the console//
+  console.log(req.body); // Log the POST request body to the console/
 
 });
 
@@ -60,6 +67,19 @@ app.post("/urls/:id/delete", (req,res) => {
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
 })
+
+app.post("/login", (req,res) => {
+  console.log("username",req.body.username);
+  res.cookie("username",req.body.username);
+  res.redirect(("/urls"))
+  
+});
+
+app.post("/logout", (req,res) => {
+  console.log("username",req.body.username);
+  res.cookie("username",req.body.username);
+  res.clearCookie('username', {path: "/login"});
+});
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);

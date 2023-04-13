@@ -16,6 +16,37 @@
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
+        <form class="form-inline" action="/login" method="POST">
+          <% if(!username || username === 'undefined') { %>
+            <div class="form-group mb-2">
+            <input
+              class="form-control"
+              type="text"
+              name="username"
+              placeholder="Username"
+              style="width: 200px; margin-left:0"
+            />
+            <button type="submit" class="btn btn-primary">Login</button>
+          </div>
+        </form>
+          <%} else if(username){ %>
+          <div>
+            <form class="form-inline" action="/logout" method="POST">
+            <button type="submit" class="btn btn-primary">Logout</button>
+          </form>
+          </div>
+          <% } %>
+            <nav class="navbar bg-body-tertiary">
+            <div class="container-fluid">
+              <span class="navbar-text">
+                <% if(!username || username !== 'undefined') { %>
+                  Hello: <%= username %>
+                <%} else { %>
+                  Please Login!
+                <% } %>
+              </span>
+            </div>
+          </nav>
       </div>
     </div>
   </nav>
