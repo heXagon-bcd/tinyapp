@@ -21,6 +21,15 @@ app.get("/", (req,res) => {
   res.send("Hello!");
 });
 
+app.get("/register", (req,res) => {
+  const templateVars = {
+    urls: urlDatabase,
+    username: req.cookies["username"]
+  };
+  console.log(req.body)
+  res.render("urls_registration",templateVars)
+});
+
 app.get("/urls", (req, res) => {
   console.log(req.cookies)
   const templateVars = {
