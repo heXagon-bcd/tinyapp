@@ -17,7 +17,7 @@
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
         <form class="form-inline" action="/login" method="POST">
-          <% if(!user || user === 'undefined') { %>
+          <% if(!user) { %>
             <div class="form-group mb-2">
             <input
               class="form-control"
