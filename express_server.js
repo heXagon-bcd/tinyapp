@@ -3,38 +3,61 @@ const app = express();
 const PORT = 8080;
 const cookieParser = require('cookie-parser');
 app.use(cookieParser())
-
-function generateRandomString() {
-  return Math.random().toString(36).substr(2, 6)
-}
-
 app.set("view engine", "ejs");
 
 app.use(express.urlencoded({ extended: true }));
+
+//generate url id
+function generateRandomString() {
+  return Math.random().toString(36).substr(2, 6)
+}
+//generate user id
+function generateRandomUser() {
+  return Math.random().toString(36).substr(2, 10)
+}
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
 
+let users = {};
+
 app.get("/", (req,res) => {
   res.send("Hello!");
 });
 
+//REGISTER PAGE
 app.get("/register", (req,res) => {
   const templateVars = {
     urls: urlDatabase,
-    username: req.cookies["username"]
+    user: null//when the user first registers, no user avail,header will look for user, with login
   };
   console.log(req.body)
   res.render("urls_registration",templateVars)
 });
 
+app.post("/register", (req,res) => {
+  console.log(req.body);
+  console.log(req.body.email);
+  const randomUser = generateRandomUser();
+  const newUser = {
+    id: randomUser,
+    email: req.body.email,
+    password: req.body.password
+  };
+  users[randomUser] = newUser;
+  res.cookie("user_id", newUser.id);
+  console.log("user db", users);
+  res.redirect("/urls");
+});
+
+// URL CREATION PAGE
 app.get("/urls", (req, res) => {
-  console.log(req.cookies)
+  console.log("cookies",req.cookies);
   const templateVars = {
     urls: urlDatabase,
-    username: req.cookies["username"]
+    user: users[req.cookies["user_id"]]
   };
   res.render("urls_index", templateVars);
 });
@@ -76,8 +99,10 @@ app.post("/urls/:id/delete", (req,res) => {
   res.redirect("/urls");
 })
 
+
+//LOGIN LOGOUT PAGE
 app.post("/login", (req,res) => {
-  console.log("username",req.body.username);
+  // console.log("username",req.body.username);
   res.cookie("username",req.body.username);
   res.redirect(("/urls"))
   
