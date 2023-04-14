@@ -133,7 +133,7 @@ app.post("/urls/:id/delete", (req,res) => {
 //LOGIN LOGOUT PAGE
 
 app.get("/login", (req, res) => {
-  res.render("/url_login");
+  res.render("/urls_login");
 })
 
 app.post("/login", (req,res) => {
