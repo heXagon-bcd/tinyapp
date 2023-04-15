@@ -133,19 +133,30 @@ app.post("/urls/:id/delete", (req,res) => {
 //LOGIN LOGOUT PAGE
 
 app.get("/login", (req, res) => {
-  res.render("/urls_login");
+  const templateVars = {
+    urls: urlDatabase,
+    user: users[req.cookies["user_id"]],
+  };
+  res.render("urls_login", templateVars);
 })
 
 app.post("/login", (req,res) => {
-  // console.log("username",req.body.username);
-  res.cookie("username",req.body.username);
-  res.redirect(("/urls"))
-  
+  console.log("login - body",req.body);
+  if(!emailLookup(req.body.email)) {
+    res.send("403 status - user not found")
+  }
+  if(users[user].password !== req.body.password) {
+    res.send("403 - wrong password")
+  }
+  if(users[user].password === req.body.password) {
+    res.redirect(("/urls"));
+  }
+    res.cookie("user_id", users[user].id);
 });
 
 app.post("/logout", (req,res) => {
-  console.log("username",req.body.username);
-  res.clearCookie('username', {path: "/login"});
+  res.clearCookie('user_id', {path: "/"});
+  res.redirect("/login");
 });
 
 app.get("/urls.json", (req, res) => {
