@@ -26,22 +26,21 @@ function emailLookup (email) {
   return null; // opposite of sending an object is to send null
 };
 
+//function to check if user cookie is present && currently in db
+function userCheck(callback) {
+  if(!req.cookies.user_id) {
+    res.redirect("/login")
+  } else {
+    callback();
+  }
+};
+
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
 
 const users = {
-  userRandomID: {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur",
-  },
-  user2RandomID: {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk",
-  },
 };
 
 app.get("/", (req,res) => {
@@ -54,7 +53,12 @@ app.get("/register", (req,res) => {
     urls: urlDatabase,
     user: null//when the user first registers, no user avail,header will look for user, with login
   };
-  res.render("urls_registration",templateVars)
+    console.log(req.cookies.user_id);
+    if(req.cookies.user_id) {
+      res.redirect("/urls")
+    } else {
+    res.render("urls_registration",templateVars)
+  };
 });
 
 app.post("/register", (req,res) => {
@@ -84,7 +88,7 @@ app.post("/register", (req,res) => {
 
 // URL CREATION PAGE
 app.get("/urls", (req, res) => {
-  console.log("cookies",req.cookies);
+  console.log("/urls cookies",req.cookies);
   const templateVars = {
     urls: urlDatabase,
     user: users[req.cookies["user_id"]],
@@ -106,22 +110,44 @@ app.post("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = {
+    urls: urlDatabase,
+    user: users[req.cookies["user_id"]]
+  };
+  if(!req.cookies.user_id) {
+    res.redirect("/login")
+  } else {
+    res.render("urls_new", templateVars);
+  }
 });
 
 
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
-  res.render("urls_show", templateVars);
+  const templateVars = { 
+    id: req.params.id, 
+    longURL: urlDatabase[req.params.id],
+    user: users[req.cookies["user_id"]] 
+  };
+  console.log("/urls/:id get", urlDatabase);
+  console.log("/urls/:id get", req.params.id);
+  for (url in urlDatabase) {
+    if(url === req.params.id) {
+      res.render("urls_show", templateVars);
+    } else {
+      res.send("invalid link id")
+    }
+  }
 });
 
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
-  if (longURL === undefined) {
+  if (!longURL) {
     res.send("404");
   } else {
-    res.redirect(longURL);
+    res.redirect(urlDatabase[req.params.id]);
   }
+  console.log("/u/:id - logn url - 1",urlDatabase[req.params.id])
+  console.log("/u/:id - logn url",longURL);
 });
 
 app.post("/urls/:id/delete", (req,res) => {
@@ -135,9 +161,16 @@ app.post("/urls/:id/delete", (req,res) => {
 app.get("/login", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
-    user: users[req.cookies["user_id"]],
+    user: req.cookies.user_id
   };
-  res.render("urls_login", templateVars);
+  console.log(templateVars.user)
+  res.render("urls_login", templateVars)
+  // if(!user) {
+  //   res.render("urls_login", templateVars);
+  // } else {
+  //   res.redirect("/urls")
+  // }
+  
 })
 
 app.post("/login", (req,res) => {
@@ -149,9 +182,11 @@ app.post("/login", (req,res) => {
     res.send("403 - wrong password")
   }
   if(users[user].password === req.body.password) {
+    res.cookie("user_id", users[user].id)
     res.redirect(("/urls"));
   }
-    res.cookie("user_id", users[user].id);
+    console.log("post /login", users[user])
+    console.log("post /login keys of users", Object.keys(users))
 });
 
 app.post("/logout", (req,res) => {
