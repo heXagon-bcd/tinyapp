@@ -1,4 +1,5 @@
 const express = require("express");
+const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 8080;
 const cookieParser = require('cookie-parser');
@@ -76,20 +77,19 @@ app.get("/register", (req,res) => {
   };
     console.log(req.cookies.user_id);
     if(req.cookies.user_id) {
-      res.redirect("/urls")
+      res.redirect("/login")
     } else {
     res.render("urls_registration",templateVars)
   };
 });
 
 app.post("/register", (req,res) => {
-  console.log("register body",req.body);
-  console.log("register email value", req.body.email);
+  
   const randomUser = generateRandomUser();
   const newUser = {
     id: randomUser,
     email: req.body.email,
-    password: req.body.password
+    password: bcrypt.hashSync(req.body.password, 10)
   };
 
   if(req.body.email === "" || req.body.password === "") {
@@ -226,10 +226,10 @@ app.post("/login", (req,res) => {
   if(!emailLookup(req.body.email)) {
     res.send("403 status - user not found")
   }
-  if(users[user].password !== req.body.password) {
+  if(bcrypt.compareSync((req.body.password), users[user].password) === false) {
     res.send("403 - wrong password")
   }
-  if(users[user].password === req.body.password) {
+  if(bcrypt.compareSync((req.body.password), users[user].password) === true) {
     res.cookie("user_id", users[user].id)
     res.redirect(("/urls"));
   }
