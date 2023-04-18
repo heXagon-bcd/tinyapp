@@ -34,14 +34,35 @@ function userCheck(callback) {
     callback();
   }
 };
+//fucntion to return the URLs where the userID is equal to the id of the currently logged-in user.
+function urlsForUser(database, userIDD) {
+  newDB = {};
+  for (key in database) {
+    if(database.hasOwnProperty(key) && database[key].userID === userIDD) {
+      newDB[key] = {
+        longURL : database[key].longURL,
+        userID : database[key].userID
+      }
+    }
+  }
+  return newDB;
+}
+
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  },
 };
 
 const users = {
 };
+
 
 app.get("/", (req,res) => {
   res.send("Hello!");
@@ -90,24 +111,34 @@ app.post("/register", (req,res) => {
 app.get("/urls", (req, res) => {
   console.log("/urls cookies",req.cookies);
   const templateVars = {
-    urls: urlDatabase,
+    urls: urlsForUser(urlDatabase, req.cookies["user_id"]),
     user: users[req.cookies["user_id"]],
   };
+  if(!req.cookies.user_id) {
+    res.send("Go back and login")
+  } else {
+  urlsForUser(urlDatabase, req.cookies["user_id"])
   res.render("urls_index", templateVars);
+  }
+
 });
 
 app.post("/urls", (req, res) => {
-  const foundKey = Object.keys(urlDatabase).find((key) => urlDatabase[key] === req.body.longURL);// find if long url already exists in dictionary
+  const foundKey = Object.keys(urlDatabase).find((key) => urlDatabase[key].longURL === req.body.longURL);// find if long url already exists in dictionary
+  console.log("aaa",foundKey);
   if (foundKey === undefined) {
-    randomString = generateRandomString()
-    urlDatabase[randomString] = req.body.longURL;
-    return res.redirect(`/urls/${randomString}`);
+    const randomString = generateRandomString();
+    urlDatabase[randomString] = {
+      "longURL": req.body.longURL,
+      "userID": req.cookies["user_id"]
+    }
+     res.redirect(`/urls/${randomString}`);
   } else {
     res.send("its already there");
-  }
-  console.log(req.body); // Log the POST request body to the console//
-
+  };
+  console.log("post /urls -",req.body); // Log the POST request body to the console//
 });
+
 
 app.get("/urls/new", (req, res) => {
   const templateVars = {
@@ -125,34 +156,51 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   const templateVars = { 
     id: req.params.id, 
-    longURL: urlDatabase[req.params.id],
+    longURL: urlDatabase[req.params.id].longURL,
     user: users[req.cookies["user_id"]] 
   };
   console.log("/urls/:id get", urlDatabase);
   console.log("/urls/:id get", req.params.id);
-  for (url in urlDatabase) {
-    if(url === req.params.id) {
-      res.render("urls_show", templateVars);
-    } else {
-      res.send("invalid link id")
+  
+  if (!req.cookies.user_id) {
+    res.send("sign in")
+  } else if(urlDatabase[req.params.id].userID !== req.cookies.user_id) {
+    res.send("you don't own the url")
+  } else {
+      return res.render("urls_show", templateVars);    
     }
-  }
 });
 
+app.post("/urls/:id", (req,res) => {
+const foundKey = Object.keys(urlDatabase).find((key) => urlDatabase[key].longURL === req.body["edit"])
+if(foundKey === false) {
+urlDatabase[req.params.id].longURL = req.body["edit"];
+res.redirect(`/urls/${req.params.id}`)
+} else {
+  res.send("its already there");
+};
+})
+
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
+  const longURL = urlDatabase[req.params.id].longURL;
   if (!longURL) {
     res.send("404");
   } else {
-    res.redirect(urlDatabase[req.params.id]);
+    res.redirect(urlDatabase[req.params.id].longURL);
   }
   console.log("/u/:id - logn url - 1",urlDatabase[req.params.id])
   console.log("/u/:id - logn url",longURL);
 });
 
 app.post("/urls/:id/delete", (req,res) => {
+  if (!req.cookies.user_id) {
+    res.send("sign in")
+  } else if(urlDatabase[req.params.id].userID !== req.cookies.user_id) {
+    res.send("you don't own the url")
+  } else {
   delete urlDatabase[req.params.id];
-  res.redirect("/urls");
+  res.redirect("/urls")
+  };
 })
 
 

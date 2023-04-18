@@ -21,8 +21,20 @@
           Short URL ID: <a href="/u/<%= id %>"><%= id %></a>
         </p>
       </div>
-      <div class="card-footer text-muted"></div>
-    </div>
+      <div class="card text-center">
+        <div class="card-header"></div>
+        <div class="card-body text-center">
+          <h5 class="card-title">Edit</h5>
+          <p class="card-text text-center">
+            <form class="form-inline mx-auto" action="/urls/<%= id %>" method="POST">
+              New URL:
+              <input type="text" class="form-control ml-2 mr-2" name="edit" aria-describedby="editurl" placeholder="http://">
+              <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+          </p>
+        </div>
+        <div class="card-footer text-muted"></div>
+      </div>
     <!-- Bootstrap JS -->
     <script
       src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
