@@ -2,8 +2,13 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 8080;
-const cookieParser = require('cookie-parser');
-app.use(cookieParser())
+const cookieSession = require('cookie-session');
+app.use(cookieSession({
+  name: 'session',
+  keys: ['secret', 'keys'],
+  //Cookie Options
+  maxAge: 24 * 0 * 0 * 0.
+}))
 app.set("view engine", "ejs");
 
 app.use(express.urlencoded({ extended: true }));
@@ -29,7 +34,7 @@ function emailLookup (email) {
 
 //function to check if user cookie is present && currently in db
 function userCheck(callback) {
-  if(!req.cookies.user_id) {
+  if(!req.session.user_id) {
     res.redirect("/login")
   } else {
     callback();
@@ -75,8 +80,8 @@ app.get("/register", (req,res) => {
     urls: urlDatabase,
     user: null//when the user first registers, no user avail,header will look for user, with login
   };
-    console.log(req.cookies.user_id);
-    if(req.cookies.user_id) {
+    console.log(req.session.user_id);
+    if(req.session.user_id) {
       res.redirect("/login")
     } else {
     res.render("urls_registration",templateVars)
@@ -102,22 +107,22 @@ app.post("/register", (req,res) => {
     users[randomUser] = newUser;
   }
   console.log("assert", newUser.email)
-  res.cookie("user_id", newUser.id);
+  req.session.user_id =  newUser.id;
   console.log("user db", users);
   res.redirect("/urls");
 });
 
 // URL CREATION PAGE
 app.get("/urls", (req, res) => {
-  console.log("/urls cookies",req.cookies);
+  console.log("/urls cookies",req.session);
   const templateVars = {
-    urls: urlsForUser(urlDatabase, req.cookies["user_id"]),
-    user: users[req.cookies["user_id"]],
+    urls: urlsForUser(urlDatabase, req.session["user_id"]),
+    user: users[req.session["user_id"]],
   };
-  if(!req.cookies.user_id) {
+  if(!req.session.user_id) {
     res.send("Go back and login")
   } else {
-  urlsForUser(urlDatabase, req.cookies["user_id"])
+  urlsForUser(urlDatabase, req.session["user_id"])
   res.render("urls_index", templateVars);
   }
 
@@ -130,7 +135,7 @@ app.post("/urls", (req, res) => {
     const randomString = generateRandomString();
     urlDatabase[randomString] = {
       "longURL": req.body.longURL,
-      "userID": req.cookies["user_id"]
+      "userID": req.session["user_id"]
     }
      res.redirect(`/urls/${randomString}`);
   } else {
@@ -143,9 +148,9 @@ app.post("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
-    user: users[req.cookies["user_id"]]
+    user: users[req.session["user_id"]]
   };
-  if(!req.cookies.user_id) {
+  if(!req.session.user_id) {
     res.redirect("/login")
   } else {
     res.render("urls_new", templateVars);
@@ -157,14 +162,14 @@ app.get("/urls/:id", (req, res) => {
   const templateVars = { 
     id: req.params.id, 
     longURL: urlDatabase[req.params.id].longURL,
-    user: users[req.cookies["user_id"]] 
+    user: users[req.session["user_id"]] 
   };
   console.log("/urls/:id get", urlDatabase);
   console.log("/urls/:id get", req.params.id);
   
-  if (!req.cookies.user_id) {
+  if (!req.session.user_id) {
     res.send("sign in")
-  } else if(urlDatabase[req.params.id].userID !== req.cookies.user_id) {
+  } else if(urlDatabase[req.params.id].userID !== req.session.user_id) {
     res.send("you don't own the url")
   } else {
       return res.render("urls_show", templateVars);    
@@ -193,9 +198,9 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.post("/urls/:id/delete", (req,res) => {
-  if (!req.cookies.user_id) {
+  if (!req.session.user_id) {
     res.send("sign in")
-  } else if(urlDatabase[req.params.id].userID !== req.cookies.user_id) {
+  } else if(urlDatabase[req.params.id].userID !== req.session.user_id) {
     res.send("you don't own the url")
   } else {
   delete urlDatabase[req.params.id];
@@ -209,7 +214,7 @@ app.post("/urls/:id/delete", (req,res) => {
 app.get("/login", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
-    user: req.cookies.user_id
+    user: req.session.user_id
   };
   console.log(templateVars.user)
   res.render("urls_login", templateVars)
