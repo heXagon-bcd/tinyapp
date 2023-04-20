@@ -7,10 +7,9 @@ const PORT = 8080;
 app.use(cookieSession({
   name: 'session',
   keys: ['secret', 'keys'],
-  //Cookie Options
-  maxAge: 24 * 0 * 0 * 0.
-}))
-app.set("view engine", "ejs");
+  maxAge: 24 * 0 * 0 * 0. //Cookie Options days/hours/minutes/seconds
+}));
+app.set("view engine", "ejs"); // use ejs as templating enjine
 app.use(express.urlencoded({ extended: true }));
 
 const urlDatabase = {
@@ -39,9 +38,9 @@ app.get("/register", (req,res) => {
     user: null//when the user first registers, no user avail,header will look for user, with login
   };
     console.log(req.session.user_id);
-    if(req.session.user_id) {
-      res.redirect("/login")
-    } else {
+  if(req.session.user_id) {
+    res.redirect("/login")
+  } else {
     res.render("urls_registration",templateVars)
   };
 });
