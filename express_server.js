@@ -1,8 +1,9 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
+const cookieSession = require('cookie-session');
+const {emailLookup, generateRandomString, generateRandomUser, urlsForUser} = require('./helpers');
 const app = express();
 const PORT = 8080;
-const cookieSession = require('cookie-session');
 app.use(cookieSession({
   name: 'session',
   keys: ['secret', 'keys'],
@@ -10,50 +11,7 @@ app.use(cookieSession({
   maxAge: 24 * 0 * 0 * 0.
 }))
 app.set("view engine", "ejs");
-
 app.use(express.urlencoded({ extended: true }));
-
-//generate url id
-function generateRandomString() {
-  return Math.random().toString(36).substr(2, 6)
-}
-//generate user id
-function generateRandomUser() {
-  return Math.random().toString(36).substr(2, 10)
-}
-
-//email searcher func
-function emailLookup (email) {
-  for (user in users) {
-    if(users[user].email === email) {
-      return users[user];
-    }
-  } 
-  return null; // opposite of sending an object is to send null
-};
-
-//function to check if user cookie is present && currently in db
-function userCheck(callback) {
-  if(!req.session.user_id) {
-    res.redirect("/login")
-  } else {
-    callback();
-  }
-};
-//fucntion to return the URLs where the userID is equal to the id of the currently logged-in user.
-function urlsForUser(database, userIDD) {
-  newDB = {};
-  for (key in database) {
-    if(database.hasOwnProperty(key) && database[key].userID === userIDD) {
-      newDB[key] = {
-        longURL : database[key].longURL,
-        userID : database[key].userID
-      }
-    }
-  }
-  return newDB;
-}
-
 
 const urlDatabase = {
   b6UTxQ: {
@@ -100,8 +58,7 @@ app.post("/register", (req,res) => {
   if(req.body.email === "" || req.body.password === "") {
     res.send("400 code")
   };
-  console.log("ture of false", emailLookup());
-  if(emailLookup(req.body.email)) {//industry standard is to checking if a value exists because real would would not know what the response is
+  if(emailLookup(req.body.email, users)) {//industry standard is to checking if a value exists because real would would not know what the response is
     res.send("400");
   } else {
     users[randomUser] = newUser;
@@ -178,7 +135,7 @@ app.get("/urls/:id", (req, res) => {
 
 app.post("/urls/:id", (req,res) => {
 const foundKey = Object.keys(urlDatabase).find((key) => urlDatabase[key].longURL === req.body["edit"])
-if(foundKey === false) {
+if(foundKey === undefined) {
 urlDatabase[req.params.id].longURL = req.body["edit"];
 res.redirect(`/urls/${req.params.id}`)
 } else {
@@ -228,7 +185,7 @@ app.get("/login", (req, res) => {
 
 app.post("/login", (req,res) => {
   console.log("login - body",req.body);
-  if(!emailLookup(req.body.email)) {
+  if(!emailLookup(req.body.email, users)) {
     res.send("403 status - user not found")
   }
   if(bcrypt.compareSync((req.body.password), users[user].password) === false) {
@@ -243,7 +200,7 @@ app.post("/login", (req,res) => {
 });
 
 app.post("/logout", (req,res) => {
-  res.clearCookie('user_id', {path: "/"});
+  res.clearCookie('session', {path: "/"});
   res.redirect("/login");
 });
 
