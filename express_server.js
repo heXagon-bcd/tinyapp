@@ -171,7 +171,6 @@ app.get("/login", (req, res) => {
 
 // route to handle front end interactions
 app.post("/login", (req,res) => {
-  console.log("login - body",req.body);
   const tempUserDB = emailLookup(req.body.email, users);
   if (!emailLookup(req.body.email, users)) {
     res.status(403).send('user not found');
