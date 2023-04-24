@@ -140,7 +140,6 @@ app.get("/u/:id", (req, res) => {
   if (!urlRecord) {
     res.status(404).send('404. Not Found. Url does not exist');
   } else {
-    console.log(urlDatabase);
     res.redirect(urlDatabase[req.params.id].longURL);
   }
 });
