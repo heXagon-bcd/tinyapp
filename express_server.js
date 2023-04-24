@@ -50,16 +50,15 @@ app.post("/register", (req,res) => {
     password: bcrypt.hashSync(req.body.password, 10)
   };
   if (req.body.email === "" || req.body.password === "") {
-    res.status(403).send("either you didn't provide an email or password");
+    res.status(403).send("You don't have authorization. Either you didn't provide an email or password");
   }
   if (emailLookup(req.body.email, users)) {//industry standard is to checking if a value exists because real would would not know what the response is
-    res.status(403).send("user already exists, please login");
+    res.status(403).send("User already exists, please login");
   } else {
     users[randomUser] = newUser;
   }
   req.session.user_id =  newUser.id;
   res.redirect("/urls");
-  console.log(users);
 });
 
 // URL CREATION PAGE
@@ -88,7 +87,7 @@ app.post("/urls", (req, res) => {
     };
     res.redirect(`/urls/${randomString}`);
   } else {
-    res.status(403).send("its already there");
+    res.status(403).send("403. url already exists");
   }
 });
 
@@ -107,15 +106,18 @@ app.get("/urls/new", (req, res) => {
 
 //route for /urls/:id in expressserver.js and render using accompanying template
 app.get("/urls/:id", (req, res) => {
+  if (!urlDatabase[req.params.id]) {
+    res.status(404).send("404. Not Found. Url does not exist");
+  }
   const templateVars = {
     id: req.params.id,
     longURL: urlDatabase[req.params.id].longURL,
     user: users[req.session["user_id"]]
   };
   if (!req.session.user_id) {
-    res.status(403).send("sign in");
+    res.status(403).send("403. You dont have authorization to this url. You either have not signed in or you don't own the URL.");
   } else if (urlDatabase[req.params.id].userID !== req.session.user_id) {
-    res.status(403).send("you don't own the url");
+    res.status(403).send("403. you don't own the this bookmarked URL");
   } else {
     return res.render("urls_show", templateVars);
   }
@@ -128,7 +130,7 @@ app.post("/urls/:id", (req,res) => {
     urlDatabase[req.params.id].longURL = req.body["edit"];
     res.redirect(`/urls/${req.params.id}`);
   } else {
-    res.send("its already there");
+    res.status(403).send("403. This record already exists in the database");
   }
 });
 
@@ -136,8 +138,9 @@ app.post("/urls/:id", (req,res) => {
 app.get("/u/:id", (req, res) => {
   const urlRecord = urlDatabase[req.params.id];
   if (!urlRecord) {
-    res.status(404).send('url does not exists');
+    res.status(404).send('404. Not Found. Url does not exist');
   } else {
+    console.log(urlDatabase);
     res.redirect(urlDatabase[req.params.id].longURL);
   }
 });
@@ -145,9 +148,9 @@ app.get("/u/:id", (req, res) => {
 //POST route for /urls/:id/delete to remove URLs
 app.post("/urls/:id/delete", (req,res) => {
   if (!req.session.user_id) {
-    res.status(403).send("sign in");
+    res.status(403).send("403. Please sign in");
   } else if (urlDatabase[req.params.id].userID !== req.session.user_id) {
-    res.status(403).send("you don't own the url");
+    res.status(403).send("403. You don't own the url");
   } else {
     delete urlDatabase[req.params.id];
     res.redirect("/urls");
@@ -165,7 +168,7 @@ app.get("/login", (req, res) => {
   if (!req.session.user_id) {
     res.render("urls_login", templateVars);
   } else {
-    res.redirect("/urls")
+    res.redirect("/urls");
   }
 });
 
@@ -173,10 +176,10 @@ app.get("/login", (req, res) => {
 app.post("/login", (req,res) => {
   const tempUserDB = emailLookup(req.body.email, users);
   if (!emailLookup(req.body.email, users)) {
-    res.status(403).send('user not found');
+    res.status(403).send('403. You not have authorization. User not found');
   }
   if (bcrypt.compareSync((req.body.password), tempUserDB.password) === false) {
-    res.status(403).send('wrong password');
+    res.status(403).send('403. You do not have authorization. Wrong password');
   }
   if (bcrypt.compareSync((req.body.password), tempUserDB.password) === true) {
     req.session.user_id = tempUserDB.id;
@@ -186,7 +189,7 @@ app.post("/login", (req,res) => {
 
 //route to handle logout button interaction
 app.post("/logout", (req,res) => {
-  res.clearCookie('session', {path: "/"});
+  req.session = null;
   res.redirect("/login");
 });
 
